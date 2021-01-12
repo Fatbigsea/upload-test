@@ -30,20 +30,16 @@
         top: 0;
         opacity: 0;
       }
-      .pdf-img{
+      .pdf-img {
         position: absolute;
-        top: 20%;
+        top: 15%;
         left: 10%;
       }
-      .pdf-img img{
+      .pdf-img img {
         width: 200px;
         height: 200px;
-      }
-      #uploadName {
-        position: absolute;
-        left: 50%;
-        top: 140px;
-        transform: translate(-50%, -50%);
+        border-radius: 12px;
+        margin-right: 10px;
       }
       .upload-bottom-button {
         position: absolute;
@@ -60,7 +56,7 @@
         line-height: 80px;
         border: none;
       }
-      .confirm-button{
+      .confirm-button {
         background-color: #4072f4;
         color: #fff;
       }
@@ -72,30 +68,28 @@
       <a href="javascript:;" class="file" style="font-size: 100px"
         >+<input type="file" id="pdf" multiple
       /></a>
-      <div id="uploadName"></div>
-      <div class="pdf-img" id="pdfImg">
-        <img src="https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=4169097453,4057097086&fm=15&gp=0.jpg" alt="">
-        <img src="https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3363295869,2467511306&fm=26&gp=0.jpg" alt="">
-      </div>
+      <!-- pdf图片反显区域 -->
+      <div class="pdf-img" id="pdfImg"></div>
       <div class="upload-bottom-button">
-        <button class="confirm-button" id="btnConfirm" type="button">确认</button>
+        <button class="confirm-button" id="btnConfirm" type="button">
+          确认
+        </button>
         <button class="cancel-button" id="btnCancel" type="button">取消</button>
       </div>
     </div>
     <script>
+      //获取dom元素
       let uploadFile = document.getElementById('pdf');
-      let uploadName = document.getElementById('uploadName');
       let pdfImg = document.getElementById('pdfImg');
+      let btnCancel = document.getElementById('btnCancel');
+      let btnConfirm = document.getElementById('btnConfirm');
       uploadFile.onchange = function () {
-        let fileType = [];
-        let fileName = [];
-        let fileNameStr = '';
+        let fileType = []; //文件类型数组（只允许pdf上传）
         let formDate = new FormData(); //构造FormData对象,这个是最终上传的文件
         for (let i = 0; i < this.files.length; i++) {
           formDate.append(i, this.files[i]);
           let type = '.' + this.files[i].type.substr(-3).toLowerCase();
           fileType.push(type);
-          fileName.push(this.files[i].name);
         }
         // 根据文件后缀，判断文件类型
         let arr = fileType.filter((e) => {
@@ -105,22 +99,12 @@
           alert('存在不是pdf的文件');
           return;
         }
-        fileName.forEach((e) => {
-          fileNameStr += '<span>' + e + '</span><br />';
-        });
-        uploadName.innerHTML = fileNameStr;
-        // TODO:调整图片样式，后期图片从接口返回
-        let imgList = [
+        // TODO:调整图片样式，后期图片上传成功后从接口返回
+        var imgList = [
           'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1751456476,189368205&fm=26&gp=0.jpg',
-          'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2466252146,2320787087&fm=15&gp=0.jpg'
-          ];
-        let imgStr = '';
-        imgList.forEach(e=>{
-          var img = document.createElement("img");
-          img.src = e;
-          console.log(img);
-          pdfImg.appendChild(img);
-        })
+          'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2466252146,2320787087&fm=15&gp=0.jpg',
+        ];
+        imgShow(imgList);
         return;
         var xhr = new XMLHttpRequest(); //创建xhr对象
         xhr.open('POST', 'url'); //上传的方法和地址
@@ -128,25 +112,83 @@
         // xhr.setRequestHeader('Authorization', token); //token
         xhr.send(formDate);
         xhr.onreadystatechange = function () {
-          console.log('state change', xhr.readyState);
           // if (this.readyState == 4 && this.status == 200) {
           //   var obj = JSON.parse(xhr.responseText); //返回值
           //   console.log(obj);
           //   if (obj.data) {
           //     alert('上传成功');
-          //     //上传成功文件类型正确才能回显
-          //     fileName.forEach((e) => {
-          //       fileNameStr += '<span>' + e + '</span><br />';
-          //     });
+          //     //TODO:上传成功的pdf图片才能回显，后端返回反显地址
           //   }
           // }
         };
-        // uploadName.innerHTML = fileNameStr;
       };
-      let btnCancel = document.getElementById('btnCancel');
-      let btnConfirm = document.getElementById('btnConfirm');
-      btnCancel.onclick = function () {};
-      btnConfirm.onclick = function () {};
+      /*
+       * 图片反显封装的函数
+       * 如果传的list为空的，则移除pdfImg下的所有img标签
+       */
+      function imgShow(list) {
+        if (isEmpty(list)) {
+          pdfImg.innerHTML = '';
+          return;
+        }
+        list.forEach((e) => {
+          var img = document.createElement('img');
+          img.src = e;
+          pdfImg.appendChild(img);
+        });
+      }
+      /*
+       * 点击取消时，删除上传的图片，同时将图片显示删除
+       * imgList 清空
+       * TODO:pdf删除接口
+       */
+      btnCancel.onclick = function () {
+        imgList = [];
+        imgShow(imgList);
+      };
+      /*
+       * 点击确定，去转回小程序s
+       */
+      btnConfirm.onclick = function () {
+        console.log('跳转回小程序首页');
+        window.wx.miniProgram.navigateTo({
+          url: `/page/button/button`,
+        });
+        window.wx.miniProgram.reLaunch({
+          url: `/page/button/button`,
+        })
+      };
+      /**
+       * 判断是否为空
+       */
+      function isEmpty(value) {
+        if (typeof value === 'undefined') {
+          return true;
+        } else if (value === null) {
+          return true;
+        } else if (typeof value === 'string' && value === '') {
+          return true;
+        } else if (typeof value === 'number' && isNaN(value)) {
+          return true;
+        } else if (Array.isArray(value) && value.length === 0) {
+          return true;
+        } else if (value instanceof Number && isNaN(value)) {
+          return true;
+        } else if (
+          value.toString() === '[object Object]' &&
+          Object.keys(value).length === 0
+        ) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+      /**
+       * 判断是否为不为空
+       */
+      function isNotEmpty(value) {
+        return !this.isEmpty(value);
+      }
     </script>
   </body>
 </html>
