@@ -35,11 +35,23 @@
         top: 15%;
         left: 10%;
       }
+      .pdf-img .img-item{
+        position: relative;
+        display: inline;
+      }
       .pdf-img img {
         width: 200px;
         height: 200px;
         border-radius: 12px;
         margin-right: 10px;
+      }
+      .pdf-img .del-button{
+        border-radius: 50%;
+        position: absolute;
+        left: 185px;
+        top: -193px;
+        width: 25px;
+        height: 25px;
       }
       .upload-bottom-button {
         position: absolute;
@@ -65,20 +77,19 @@
   <body>
     　
     <div class="uploadComponent">
-      <a href="javascript:;" class="file" style="font-size: 100px"
-        >+<input type="file" id="pdf" multiple
-      /></a>
+      <a href="javascript:;" class="file" style="font-size: 100px">+<input type="file" id="pdf" multiple/></a>
       <!-- pdf图片反显区域 -->
       <div class="pdf-img" id="pdfImg"></div>
+      <!-- 底部按钮区域 -->
       <div class="upload-bottom-button">
-        <button class="confirm-button" id="btnConfirm" type="button">
-          确认
-        </button>
-        <button class="cancel-button" id="btnCancel" type="button">取消</button>
+        <button class="confirm-button" id="btnConfirm" type="button">确认</button>
+        <button class="cancel-button" id="btnCancel" type="button">清空</button>
       </div>
     </div>
+      <!-- 引入wx包 -->
     <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
     <script>
+      var imgList = [];
       //获取dom元素
       let uploadFile = document.getElementById('pdf');
       let pdfImg = document.getElementById('pdfImg');
@@ -101,7 +112,7 @@
           return;
         }
         // TODO:调整图片样式，后期图片上传成功后从接口返回
-        var imgList = [
+        imgList = [
           'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1751456476,189368205&fm=26&gp=0.jpg',
           'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2466252146,2320787087&fm=15&gp=0.jpg',
         ];
@@ -125,17 +136,38 @@
       };
       /*
        * 图片反显封装的函数
-       * 如果传的list为空的，则移除pdfImg下的所有img标签
+       * 1、如果传的list为空的，则移除pdfImg下的所有img标签
+       * 2、list不为空时，遍历imgList 数组，动态生成div,img标签，添加src
+       * 3、给标签添加点击事件
+       * 4、单个删除img，将pdfImg容器先制空在向里面添加元素
        */
       function imgShow(list) {
         if (isEmpty(list)) {
           pdfImg.innerHTML = '';
           return;
         }
-        list.forEach((e) => {
+        list.forEach((item,i) => {
+          var imgItemDiv = document.createElement('div');
           var img = document.createElement('img');
-          img.src = e;
-          pdfImg.appendChild(img);
+          img.src = item;
+          img.onclick = function handleClickImg(e,imgUrl=item){
+            window.wx.previewImage({
+              urls: [imgUrl],
+            });
+          };
+          var delButton = document.createElement('button');
+          var delText=document.createTextNode("X");
+          delButton.className = "del-button";
+          delButton.onclick = function handleDel(e,imgIdx = i){
+            imgList.splice(i,1);
+            pdfImg.innerHTML = '';
+            imgShow(imgList);
+          }
+          imgItemDiv.className = "img-item";
+          delButton.appendChild(delText);
+          imgItemDiv.appendChild(img);
+          imgItemDiv.appendChild(delButton);
+          pdfImg.appendChild(imgItemDiv);
         });
       }
       /*
@@ -152,13 +184,13 @@
        */
       btnConfirm.onclick = function () {
         console.log('跳转回小程序首页');
-        console.log(window.wx.miniProgram);
+        console.log(window.wx);
         window.wx.miniProgram.navigateTo({
-          url: `pages/button/index`,
+          url: 'pages/button/index',
         });
-        window.wx.miniProgram.reLaunch({
-          url: `pages/button/index`,
-        })
+        // window.wx.miniProgram.reLaunch({
+        //   url: `pages/button/index`,
+        // })
       };
       /**
        * 判断是否为空
