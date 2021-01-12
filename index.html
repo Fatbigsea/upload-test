@@ -10,7 +10,6 @@
       }
       .file {
         position: absolute;
-        /* top: 10%; */
         left: 50%;
         width: 200px;
         height: 200px;
@@ -33,7 +32,7 @@
       }
       .pdf-img{
         position: absolute;
-        top: 50%;
+        top: 20%;
         left: 10%;
       }
       .pdf-img img{
@@ -53,10 +52,10 @@
       }
       .cancel-button,
       .confirm-button {
-        width: 120px;
+        width: 160px;
         height: 80px;
-        border-radius: 6px;
-        font-size: 24px;
+        border-radius: 12px;
+        font-size: 32px;
         text-align: center;
         line-height: 80px;
         border: none;
@@ -110,6 +109,18 @@
           fileNameStr += '<span>' + e + '</span><br />';
         });
         uploadName.innerHTML = fileNameStr;
+        // TODO:调整图片样式，后期图片从接口返回
+        let imgList = [
+          'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1751456476,189368205&fm=26&gp=0.jpg',
+          'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2466252146,2320787087&fm=15&gp=0.jpg'
+          ];
+        let imgStr = '';
+        imgList.forEach(e=>{
+          var img = document.createElement("img");
+          img.src = e;
+          console.log(img);
+          pdfImg.appendChild(img);
+        })
         return;
         var xhr = new XMLHttpRequest(); //创建xhr对象
         xhr.open('POST', 'url'); //上传的方法和地址
