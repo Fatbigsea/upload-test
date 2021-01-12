@@ -10,17 +10,17 @@
       }
       .file {
         position: absolute;
-        top: 10%;
+        /* top: 10%; */
         left: 50%;
         width: 200px;
         height: 200px;
         box-sizing: border-box;
         transform: translate(-50%, 0);
         display: inline-block;
-        border: 2px dashed #ccc;
+        border: 4px dashed #ccc;
         text-decoration: none;
         text-align: center;
-        line-height: 90px;
+        line-height: 164px;
         border-radius: 5px;
         color: #aaa;
       }
@@ -30,6 +30,15 @@
         right: 0;
         top: 0;
         opacity: 0;
+      }
+      .pdf-img{
+        position: absolute;
+        top: 50%;
+        left: 10%;
+      }
+      .pdf-img img{
+        width: 200px;
+        height: 200px;
       }
       #uploadName {
         position: absolute;
@@ -44,12 +53,12 @@
       }
       .cancel-button,
       .confirm-button {
-        width: 160px;
-        height: 60px;
+        width: 120px;
+        height: 80px;
         border-radius: 6px;
         font-size: 24px;
         text-align: center;
-        line-height: 60px;
+        line-height: 80px;
         border: none;
       }
       .confirm-button{
@@ -61,10 +70,14 @@
   <body>
     　
     <div class="uploadComponent">
-      <a href="javascript:;" class="file" style="font-size: 50px"
+      <a href="javascript:;" class="file" style="font-size: 100px"
         >+<input type="file" id="pdf" multiple
       /></a>
       <div id="uploadName"></div>
+      <div class="pdf-img" id="pdfImg">
+        <img src="https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=4169097453,4057097086&fm=15&gp=0.jpg" alt="">
+        <img src="https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=3363295869,2467511306&fm=26&gp=0.jpg" alt="">
+      </div>
       <div class="upload-bottom-button">
         <button class="confirm-button" id="btnConfirm" type="button">确认</button>
         <button class="cancel-button" id="btnCancel" type="button">取消</button>
@@ -73,6 +86,7 @@
     <script>
       let uploadFile = document.getElementById('pdf');
       let uploadName = document.getElementById('uploadName');
+      let pdfImg = document.getElementById('pdfImg');
       uploadFile.onchange = function () {
         let fileType = [];
         let fileName = [];
@@ -92,10 +106,15 @@
           alert('存在不是pdf的文件');
           return;
         }
+        fileName.forEach((e) => {
+          fileNameStr += '<span>' + e + '</span><br />';
+        });
+        uploadName.innerHTML = fileNameStr;
+        return;
         var xhr = new XMLHttpRequest(); //创建xhr对象
         xhr.open('POST', 'url'); //上传的方法和地址
         xhr.setRequestHeader('Content-Type', 'multipart/form-data');
-        xhr.setRequestHeader('Authorization', token); //token
+        // xhr.setRequestHeader('Authorization', token); //token
         xhr.send(formDate);
         xhr.onreadystatechange = function () {
           console.log('state change', xhr.readyState);
@@ -111,7 +130,7 @@
           //   }
           // }
         };
-        uploadName.innerHTML = fileNameStr;
+        // uploadName.innerHTML = fileNameStr;
       };
       let btnCancel = document.getElementById('btnCancel');
       let btnConfirm = document.getElementById('btnConfirm');
