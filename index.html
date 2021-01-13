@@ -4,25 +4,57 @@
     <meta charset="utf-8" />
     <title></title>
     <style type="text/css">
+      body {
+        margin: 0;
+      }
       .uploadComponent {
         position: relative;
         height: 100vh;
       }
+
+      .upload-nav {
+        width: 100%;
+        height: 100px;
+        background-color: #4072f4;
+      }
+
+      .upload-header {
+        position: relative;
+        width: 90%;
+        margin: 0 auto;
+        height: 260px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 12px 5px #f6f6f6;
+        position: relative;
+        top: -60px;
+      }
+
+      .upload-header p {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translate(-50%, 0);
+        font-size: 32px;
+        color: #474a51;
+      }
+
       .file {
         position: absolute;
         left: 50%;
-        width: 200px;
-        height: 200px;
+        width: 100px;
+        height: 100px;
         box-sizing: border-box;
-        transform: translate(-50%, 0);
+        transform: translate(-50%, 30%);
         display: inline-block;
-        border: 4px dashed #ccc;
+        border: 3px solid #4072f4;
         text-decoration: none;
         text-align: center;
-        line-height: 164px;
-        border-radius: 5px;
-        color: #aaa;
+        line-height: 72px;
+        border-radius: 50%;
+        color: #4072f4;
       }
+
       .file input {
         position: absolute;
         width: 100%;
@@ -32,26 +64,41 @@
         top: 0;
         opacity: 0;
       }
+
+      .img-header {
+        width: 100%;
+        border-bottom: 2px solid #ebebeb;
+        margin-bottom: 40px;
+        color: #83888e;
+        padding-bottom: 10px;
+        font-size: 32px;
+      }
+
       .pdf-img {
         position: absolute;
-        top: 15%;
-        left: 10%;
+        top: 22%;
+        left: 5%;
+        width: 90%;
       }
-      .pdf-img .img-item{
+
+      .pdf-img .img-item {
         position: relative;
         display: inline;
       }
+
       .pdf-img img {
         width: 200px;
         height: 200px;
         border-radius: 12px;
         margin-right: 10px;
       }
-      .pdf-img .del-button{
+
+      .pdf-img .del-button {
         border-radius: 50%;
-        position: absolute;
-        left: 170px;
-        top: -206px;
+        position: relative;
+        left: 216px;
+        top: -193px;
+        z-index: 1;
         width: 50px;
         height: 50px;
         font-size: 35px;
@@ -59,11 +106,13 @@
         color: #fff;
         border: none;
       }
+
       .upload-bottom-button {
         position: absolute;
         right: 5%;
         top: 90%;
       }
+
       .cancel-button,
       .confirm-button {
         width: 160px;
@@ -74,26 +123,38 @@
         line-height: 80px;
         border: none;
       }
+
       .confirm-button {
         background-color: #4072f4;
         color: #fff;
       }
     </style>
   </head>
+
   <body>
-    　
     <div class="uploadComponent">
-      <a href="javascript:;" class="file" style="font-size: 100px">+<input type="file" id="pdf" multiple/></a>
+      <div class="upload-nav"></div>
+      <div class="upload-header">
+        <a href="javascript:;" class="file" style="font-size: 100px"
+          >+<input type="file" id="pdf" multiple
+        /></a>
+        <p>上传PDF文件</p>
+      </div>
       <!-- pdf图片反显区域 -->
       <div class="pdf-img" id="pdfImg"></div>
       <!-- 底部按钮区域 -->
       <div class="upload-bottom-button">
-        <button class="confirm-button" id="btnConfirm" type="button">确认</button>
+        <button class="confirm-button" id="btnConfirm" type="button">
+          确认
+        </button>
         <button class="cancel-button" id="btnCancel" type="button">清空</button>
       </div>
     </div>
-      <!-- 引入wx包 -->
-    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"></script>
+    <!-- 引入wx包 -->
+    <script
+      type="text/javascript"
+      src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"
+    ></script>
     <script>
       var imgList = [];
       //获取dom元素
@@ -152,29 +213,33 @@
           pdfImg.innerHTML = '';
           return;
         }
-        list.forEach((item,i) => {
-          console.log(item);
+        var imgHeader = document.createElement('div');
+        imgHeader.className = 'img-header';
+        imgHeader.innerText = '已上传';
+        pdfImg.appendChild(imgHeader);
+        list.forEach((item, i) => {
           var imgItemDiv = document.createElement('div');
           var img = document.createElement('img');
           img.src = item;
-          img.onclick = function handleClickImg(e,imgUrl=item){
+          img.onclick = function handleClickImg(e, imgUrl = item) {
+            console.log(111, imgUrl);
             window.wx.previewImage({
-              // current: imgUrl,
-              urls: ['https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1751456476,189368205&fm=26&gp=0.jpg'],
+              urls: [imgUrl],
             });
+            console.log(window.wx.previewImage);
           };
           var delButton = document.createElement('button');
-          var delText=document.createTextNode("X");
-          delButton.className = "del-button";
-          delButton.onclick = function handleDel(e,imgIdx = i){
-            imgList.splice(i,1);
+          var delText = document.createTextNode('X');
+          delButton.className = 'del-button';
+          delButton.onclick = function handleDel(e, imgIdx = i) {
+            imgList.splice(i, 1);
             pdfImg.innerHTML = '';
             imgShow(imgList);
-          }
-          imgItemDiv.className = "img-item";
+          };
+          imgItemDiv.className = 'img-item';
           delButton.appendChild(delText);
           imgItemDiv.appendChild(img);
-          imgItemDiv.appendChild(delButton);
+          pdfImg.appendChild(delButton);
           pdfImg.appendChild(imgItemDiv);
         });
       }
