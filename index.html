@@ -13,7 +13,8 @@
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
-    <!-- <script scr='./static/lib/wechat/jweixin-1.6.0.js'></script> -->
+    <script src="https://cdn.bootcss.com/jquery/3.5.1/jquery.min.js"></script>
+    <!-- <script scr='./static/lib/jquery-3.4.1/jquery-3.4.1.min.js'></script> -->
   </head>
   <style type="text/css">
     body {
@@ -144,7 +145,8 @@
             accept="file"
             multiple
             :preview-image="false"
-            :before-read="beforeRead"
+            :before-read="handleBeforeRead"
+            :after-read="handleAfterRead"
           >
             <van-button
               class="van-uploader-btn"
@@ -160,17 +162,25 @@
           <!-- TODO:判断显隐,下面的img 应该使用数组遍历 v-if="imgSrcList.length > 0" -->
           <div class="img-header">已上传</div>
           <div class="img-item" v-for="(img,idx) in imgSrcList" :key="idx">
-            <van-image  width="250" height="250" radius="12":src="img.url" @click="handlePreviewImg(img.url,idx)"></van-image>
+            <van-image
+              width="250"
+              height="250"
+              radius="12"
+              :src="img.url"
+              @click="handlePreviewImg(img.url,idx)"
+            ></van-image>
             <van-icon
-            class="del-button"
-            name="close"
-            @click="handleDelete(idx)"
-          />
+              class="del-button"
+              name="close"
+              @click="handleDelete(idx)"
+            />
           </div>
         </div>
         <!-- 底部按钮区域 -->
         <div class="upload-bottom-button">
-          <van-button class="confirm-button" type="info" @click="handleConfirm">确认</van-button>
+          <van-button class="confirm-button" type="info" @click="handleConfirm"
+            >确认</van-button
+          >
           <van-button class="cancel-button" @click="handleDelete()"
             >清空</van-button
           >
@@ -204,18 +214,75 @@
         },
         methods: {
           /*
-           * 上传前进行校验
+           * 上传前进行校验（上传的多个文件都应该是pdf）
+           * 允许上传多个文件，将上传的文件构建一个新数组，构建文件类型的数组
+           * 判断文件类型的每一项是否有不为pdf的文件
+           * 如果有则不允许上传
            */
-          beforeRead(file) {
-            console.log(file);
-            if (file.type !== 'application/pdf') {
+          handleBeforeRead(file) {
+            let fileList = [];
+            let fileTypeList = [];
+            fileList = fileList.concat(file);
+            fileTypeList = fileList.map((file) => file.type);
+            let flag = fileTypeList.some((e) => e !== 'application/pdf');
+            if (flag) {
+              alert('存在不是pdf的文件');
               vant.Toast({
-                message: '请上传pdf',
-                icon:'none',
+                message: '存在不是pdf的文件',
+                icon: 'none',
               });
               return false;
             }
             return true;
+          },
+          /*
+           * 处理上传成功之后的回调
+           */
+          handleAfterRead(file) {
+            let fileList = [];
+            fileList = fileList.concat(file);
+            fileList.forEach((file) => {
+              let fileForm = this.buildParams(file.file);
+              this.uploadFile(fileForm)
+            });
+          },
+          /**
+           * 构建参数
+           */
+          buildParams(file) {
+            let params = new FormData();
+            // params.append('key', idx);
+            params.append('pdfId', file.lastModified);
+            params.append('contentType', file.type);
+            params.append('file', file);
+            return params;
+          },
+          /**
+           * 上传附件
+           * TODO:之后接要调试，参数要调试
+           */
+          uploadFile(params) {
+            $.ajax({
+              url: '/pty/pa/wechat/signature',
+              type: 'post',
+              data: JSON.stringify({
+                url: location.href.split('#')[0],
+              }),
+              contentType: 'application/json;charset=utf-8',
+              async: true,
+              success: function(res) {
+                // var data = res.data;
+                // appId = data.appId;
+                // wx.config({
+                //   debug: false, // 是否开启调试模式
+                //   appId: data.appId, // 必填，公众号的唯一标识
+                //   timestamp: data.timestamp, // 必填，生成签名的时间戳
+                //   nonceStr: data.noncestr, // 必填，生成签名的随机串
+                //   signature: data.signature, // 必填，签名
+                //   jsApiList: ['scanQRCode', 'chooseImage'], // 必填，需要使用的JS接口列表
+                // });
+              },
+            });
           },
           /**
            * 处理文件删除
@@ -223,16 +290,16 @@
            *     存在参数，是单个删除
            */
           handleDelete(idx) {
-            if(this.isEmpty(idx)){
+            if (this.isEmpty(idx)) {
               this.imgSrcList = [];
-            }else{
-              this.imgSrcList.splice(idx, 1)
+            } else {
+              this.imgSrcList.splice(idx, 1);
             }
           },
           /*
            * 处理图片预览
            */
-          handlePreviewImg(url,index) {
+          handlePreviewImg(url, index) {
             vant.ImagePreview({
               images: [url], // 预览图片的那个数组
               showIndex: true,
@@ -241,10 +308,10 @@
             });
           },
           /*
-          * 处理确认
-          * TODO:走后端已提交接口,成功后，返回小程序首页
-          */
-          handleConfirm(){
+           * 处理确认
+           * TODO:走后端已提交接口,成功后，返回小程序首页
+           */
+          handleConfirm() {
             wx.miniProgram.navigateTo({
               url: '/pages/button/index',
             });
@@ -283,115 +350,6 @@
         },
         created() {},
       });
-      // var imgList = [];
-      // //获取dom元素
-      // let uploadFile = document.getElementById('pdf');
-      // let pdfImg = document.getElementById('pdfImg');
-      // let btnCancel = document.getElementById('btnCancel');
-      // let btnConfirm = document.getElementById('btnConfirm');
-      // uploadFile.onchange = function() {
-      //   let fileType = []; //文件类型数组（只允许pdf上传）
-      //   let formDate = new FormData(); //构造FormData对象,这个是最终上传的文件
-      //   for (let i = 0; i < this.files.length; i++) {
-      //     formDate.append(i, this.files[i]);
-      //     let type = '.' + this.files[i].type.substr(-3).toLowerCase();
-      //     fileType.push(type);
-      //   }
-      //   // 根据文件后缀，判断文件类型
-      //   let arr = fileType.filter((e) => {
-      //     return e !== '.pdf';
-      //   });
-      //   if (arr.length !== 0) {
-      //     alert('存在不是pdf的文件');
-      //     return;
-      //   }
-      //   // TODO:调整图片样式，后期图片上传成功后从接口返回
-      //   imgList = [
-      //     'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1751456476,189368205&fm=26&gp=0.jpg',
-      //     'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2466252146,2320787087&fm=15&gp=0.jpg',
-      //   ];
-      //   imgShow(imgList);
-      //   return;
-      //   var xhr = new XMLHttpRequest(); //创建xhr对象
-      //   xhr.open('POST', 'url'); //上传的方法和地址
-      //   xhr.setRequestHeader('Content-Type', 'multipart/form-data');
-      //   // xhr.setRequestHeader('Authorization', token); //token
-      //   xhr.send(formDate);
-      //   xhr.onreadystatechange = function() {
-      //     // if (this.readyState == 4 && this.status == 200) {
-      //     //   var obj = JSON.parse(xhr.responseText); //返回值
-      //     //   console.log(obj);
-      //     //   if (obj.data) {
-      //     //     alert('上传成功');
-      //     //     //TODO:上传成功的pdf图片才能回显，后端返回反显地址
-      //     //   }
-      //     // }
-      //   };
-      // };
-      // /*
-      //  * 图片反显封装的函数
-      //  * 1、如果传的list为空的，则移除pdfImg下的所有img标签
-      //  * 2、list不为空时，遍历imgList 数组，动态生成div,img标签，添加src
-      //  * 3、给标签添加点击事件
-      //  * 4、单个删除img，将pdfImg容器先制空在向里面添加元素
-      //  */
-      // function imgShow(list) {
-      //   if (isEmpty(list)) {
-      //     pdfImg.innerHTML = '';
-      //     return;
-      //   }
-      //   var imgHeader = document.createElement('div');
-      //   imgHeader.className = 'img-header';
-      //   imgHeader.innerText = '已上传';
-      //   pdfImg.appendChild(imgHeader);
-      //   list.forEach((item, i) => {
-      //     var imgItemDiv = document.createElement('div');
-      //     var img = document.createElement('img');
-      //     img.src = item;
-      //     img.onclick = function handleClickImg(e, imgUrl = item) {
-      //       console.log(111, imgUrl);
-      //       window.wx.previewImage({
-      //         urls: [imgUrl],
-      //       });
-      //       console.log(window.wx.previewImage);
-      //     };
-      //     var delButton = document.createElement('button');
-      //     var delText = document.createTextNode('X');
-      //     delButton.className = 'del-button';
-      //     delButton.onclick = function handleDel(e, imgIdx = i) {
-      //       imgList.splice(i, 1);
-      //       pdfImg.innerHTML = '';
-      //       imgShow(imgList);
-      //     };
-      //     imgItemDiv.className = 'img-item';
-      //     delButton.appendChild(delText);
-      //     imgItemDiv.appendChild(img);
-      //     pdfImg.appendChild(delButton);
-      //     pdfImg.appendChild(imgItemDiv);
-      //   });
-      // }
-      // /*
-      //  * 点击取消时，删除上传的图片，同时将图片显示删除
-      //  * imgList 清空
-      //  * TODO:pdf删除接口
-      //  */
-      // btnCancel.onclick = function() {
-      //   imgList = [];
-      //   imgShow(imgList);
-      // };
-      // /*
-      //  * 点击确定，去转回小程序s
-      //  */
-      // btnConfirm.onclick = function() {
-      //   console.log('跳转回小程序首页');
-      //   console.log(window.wx);
-      //   window.wx.miniProgram.navigateTo({
-      //     url: '/pages/button/index',
-      //   });
-      //   // window.wx.miniProgram.reLaunch({
-      //   //   url: `pages/button/index`,
-      //   // })
-      // };
     </script>
   </body>
 </html>
