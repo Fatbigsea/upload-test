@@ -3,299 +3,395 @@
   <head>
     <meta charset="utf-8" />
     <title></title>
-    <style type="text/css">
-      body {
-        margin: 0;
-      }
-      .uploadComponent {
-        position: relative;
-        height: 100vh;
-      }
-
-      .upload-nav {
-        width: 100%;
-        height: 100px;
-        background-color: #4072f4;
-      }
-
-      .upload-header {
-        position: relative;
-        width: 90%;
-        margin: 0 auto;
-        height: 260px;
-        background-color: #fff;
-        border-radius: 5px;
-        box-shadow: 0 0 12px 5px #f6f6f6;
-        position: relative;
-        top: -60px;
-      }
-
-      .upload-header p {
-        position: absolute;
-        bottom: 10px;
-        left: 50%;
-        transform: translate(-50%, 0);
-        font-size: 32px;
-        color: #474a51;
-      }
-
-      .file {
-        position: absolute;
-        left: 50%;
-        width: 100px;
-        height: 100px;
-        box-sizing: border-box;
-        transform: translate(-50%, 30%);
-        display: inline-block;
-        border: 3px solid #4072f4;
-        text-decoration: none;
-        text-align: center;
-        line-height: 72px;
-        border-radius: 50%;
-        color: #4072f4;
-      }
-
-      .file input {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        font-size: 70px;
-        right: 0;
-        top: 0;
-        opacity: 0;
-      }
-
-      .img-header {
-        width: 100%;
-        border-bottom: 2px solid #ebebeb;
-        margin-bottom: 40px;
-        color: #83888e;
-        padding-bottom: 10px;
-        font-size: 32px;
-      }
-
-      .pdf-img {
-        position: absolute;
-        top: 22%;
-        left: 5%;
-        width: 90%;
-      }
-
-      .pdf-img .img-item {
-        position: relative;
-        display: inline;
-      }
-
-      .pdf-img img {
-        width: 200px;
-        height: 200px;
-        border-radius: 12px;
-        margin-right: 10px;
-      }
-
-      .pdf-img .del-button {
-        border-radius: 50%;
-        position: relative;
-        left: 216px;
-        top: -193px;
-        z-index: 1;
-        width: 50px;
-        height: 50px;
-        font-size: 35px;
-        background-color: #4072f4;
-        color: #fff;
-        border: none;
-      }
-
-      .upload-bottom-button {
-        position: absolute;
-        right: 5%;
-        top: 90%;
-      }
-
-      .cancel-button,
-      .confirm-button {
-        width: 160px;
-        height: 80px;
-        border-radius: 12px;
-        font-size: 32px;
-        text-align: center;
-        line-height: 80px;
-        border: none;
-      }
-
-      .confirm-button {
-        background-color: #4072f4;
-        color: #fff;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="uploadComponent">
-      <div class="upload-nav"></div>
-      <div class="upload-header">
-        <a href="javascript:;" class="file" style="font-size: 100px"
-          >+<input type="file" id="pdf" multiple
-        /></a>
-        <p>上传PDF文件</p>
-      </div>
-      <!-- pdf图片反显区域 -->
-      <div class="pdf-img" id="pdfImg"></div>
-      <!-- 底部按钮区域 -->
-      <div class="upload-bottom-button">
-        <button class="confirm-button" id="btnConfirm" type="button">
-          确认
-        </button>
-        <button class="cancel-button" id="btnCancel" type="button">清空</button>
-      </div>
-    </div>
-    <!-- 引入wx包 -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css"
+    />
     <script
       type="text/javascript"
-      src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"
+      src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"
     ></script>
-    <script>
-      var imgList = [];
-      //获取dom元素
-      let uploadFile = document.getElementById('pdf');
-      let pdfImg = document.getElementById('pdfImg');
-      let btnCancel = document.getElementById('btnCancel');
-      let btnConfirm = document.getElementById('btnConfirm');
-      uploadFile.onchange = function () {
-        let fileType = []; //文件类型数组（只允许pdf上传）
-        let formDate = new FormData(); //构造FormData对象,这个是最终上传的文件
-        for (let i = 0; i < this.files.length; i++) {
-          formDate.append(i, this.files[i]);
-          let type = '.' + this.files[i].type.substr(-3).toLowerCase();
-          fileType.push(type);
-        }
-        // 根据文件后缀，判断文件类型
-        let arr = fileType.filter((e) => {
-          return e !== '.pdf';
-        });
-        if (arr.length !== 0) {
-          alert('存在不是pdf的文件');
-          return;
-        }
-        // TODO:调整图片样式，后期图片上传成功后从接口返回
-        imgList = [
-          'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1751456476,189368205&fm=26&gp=0.jpg',
-          'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2466252146,2320787087&fm=15&gp=0.jpg',
-        ];
-        imgShow(imgList);
-        return;
-        var xhr = new XMLHttpRequest(); //创建xhr对象
-        xhr.open('POST', 'url'); //上传的方法和地址
-        xhr.setRequestHeader('Content-Type', 'multipart/form-data');
-        // xhr.setRequestHeader('Authorization', token); //token
-        xhr.send(formDate);
-        xhr.onreadystatechange = function () {
-          // if (this.readyState == 4 && this.status == 200) {
-          //   var obj = JSON.parse(xhr.responseText); //返回值
-          //   console.log(obj);
-          //   if (obj.data) {
-          //     alert('上传成功');
-          //     //TODO:上传成功的pdf图片才能回显，后端返回反显地址
-          //   }
-          // }
-        };
-      };
-      /*
-       * 图片反显封装的函数
-       * 1、如果传的list为空的，则移除pdfImg下的所有img标签
-       * 2、list不为空时，遍历imgList 数组，动态生成div,img标签，添加src
-       * 3、给标签添加点击事件
-       * 4、单个删除img，将pdfImg容器先制空在向里面添加元素
-       */
-      function imgShow(list) {
-        if (isEmpty(list)) {
-          pdfImg.innerHTML = '';
-          return;
-        }
-        var imgHeader = document.createElement('div');
-        imgHeader.className = 'img-header';
-        imgHeader.innerText = '已上传';
-        pdfImg.appendChild(imgHeader);
-        list.forEach((item, i) => {
-          var imgItemDiv = document.createElement('div');
-          var img = document.createElement('img');
-          img.src = item;
-          img.onclick = function handleClickImg(e, imgUrl = item) {
-            console.log(111, imgUrl);
-            window.wx.previewImage({
-              urls: [imgUrl],
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+    <!-- <script scr='./static/lib/wechat/jweixin-1.6.0.js'></script> -->
+  </head>
+  <style type="text/css">
+    body {
+      margin: 0;
+    }
+    .uploadComponent {
+      position: relative;
+      height: 100vh;
+    }
+
+    .upload-nav {
+      width: 100%;
+      height: 100px;
+      background-color: #4072f4;
+    }
+
+    .upload-header {
+      position: relative;
+      width: 90%;
+      margin: 0 auto;
+      height: 260px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 12px 5px #f6f6f6;
+      position: relative;
+      top: -60px;
+    }
+
+    .upload-header p {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translate(-50%, 0);
+      font-size: 32px;
+      color: #474a51;
+    }
+    .van-uploader {
+      position: absolute;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      box-sizing: border-box;
+      transform: translate(-50%, 30%);
+      display: inline-block;
+      border: 6px solid #4072f4;
+      text-decoration: none;
+      text-align: center;
+      line-height: 72px;
+      border-radius: 50%;
+      color: #4072f4;
+    }
+    .van-uploader-btn {
+      border: none;
+      font-size: 50px;
+      font-weight: 700;
+      background: none;
+      color: #4072f4 !important;
+      text-align: center;
+    }
+    .img-header {
+      width: 100%;
+      border-bottom: 2px solid #ebebeb;
+      margin-bottom: 40px;
+      color: #83888e;
+      padding-bottom: 10px;
+      font-size: 32px;
+    }
+
+    .pdf-img {
+      position: absolute;
+      top: 22%;
+      left: 5%;
+      width: 90%;
+    }
+
+    .pdf-img .img-item {
+      position: relative;
+      display: inline-block;
+      width: 290px;
+    }
+    .del-button {
+      border-radius: 50%;
+      position: relative;
+      left: 220px;
+      top: -270px;
+      z-index: 1;
+      width: 50px;
+      height: 50px;
+      font-size: 50px;
+      background-color: #4072f4;
+      color: #fff;
+      border: none;
+    }
+
+    .upload-bottom-button {
+      position: absolute;
+      right: 5%;
+      top: 90%;
+    }
+
+    .cancel-button,
+    .confirm-button {
+      width: 160px;
+      height: 80px;
+      border-radius: 12px;
+      font-size: 32px;
+      text-align: center;
+      line-height: 80px;
+      border: none;
+    }
+
+    .confirm-button {
+      background-color: #4072f4;
+      color: #fff;
+    }
+    .cancel-button {
+      background-color: #eee;
+    }
+  </style>
+
+  <body>
+    <div id="uploadPDF">
+      <div class="uploadComponent">
+        <div class="upload-nav"></div>
+        <div class="upload-header">
+          <van-uploader
+            v-model="fileList"
+            accept="file"
+            multiple
+            :preview-image="false"
+            :before-read="beforeRead"
+          >
+            <van-button
+              class="van-uploader-btn"
+              icon="plus"
+              plain
+              type="info"
+            ></van-button>
+          </van-uploader>
+          <p>上传PDF文件</p>
+        </div>
+        <!-- pdf图片反显区域 -->
+        <div class="pdf-img" id="pdfImg">
+          <!-- TODO:判断显隐,下面的img 应该使用数组遍历 v-if="imgSrcList.length > 0" -->
+          <div class="img-header">已上传</div>
+          <div class="img-item" v-for="(img,idx) in imgSrcList" :key="idx">
+            <van-image  width="250" height="250" radius="12":src="img.url" @click="handlePreviewImg(img.url,idx)"></van-image>
+            <van-icon
+            class="del-button"
+            name="close"
+            @click="handleDelete(idx)"
+          />
+          </div>
+        </div>
+        <!-- 底部按钮区域 -->
+        <div class="upload-bottom-button">
+          <van-button class="confirm-button" type="info" @click="handleConfirm">确认</van-button>
+          <van-button class="cancel-button" @click="handleDelete()"
+            >清空</van-button
+          >
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      var vue = new Vue({
+        el: '#uploadPDF',
+        template: ``,
+        data: function() {
+          return {
+            fileList: [], //上传文件列表
+            imgSrcList: [
+              { url: 'https://img.yzcdn.cn/vant/leaf.jpg' },
+              {
+                url: 'https://img.yzcdn.cn/vant/sand.jpg',
+                deletable: true,
+                beforeDelete: () => {
+                  Toast('自定义单个预览图片的事件和样式');
+                },
+              },
+              {
+                url: 'https://img.yzcdn.cn/vant/tree.jpg',
+                deletable: true,
+                imageFit: 'contain',
+                previewSize: 120,
+              },
+            ], //图片Scr列表
+          };
+        },
+        methods: {
+          /*
+           * 上传前进行校验
+           */
+          beforeRead(file) {
+            console.log(file);
+            if (file.type !== 'application/pdf') {
+              vant.Toast({
+                message: '请上传pdf',
+                icon:'none',
+              });
+              return false;
+            }
+            return true;
+          },
+          /**
+           * 处理文件删除
+           * TODO:pdf删除接口,根据传参来判断是单个删除还是全部清空
+           *     存在参数，是单个删除
+           */
+          handleDelete(idx) {
+            if(this.isEmpty(idx)){
+              this.imgSrcList = [];
+            }else{
+              this.imgSrcList.splice(idx, 1)
+            }
+          },
+          /*
+           * 处理图片预览
+           */
+          handlePreviewImg(url,index) {
+            vant.ImagePreview({
+              images: [url], // 预览图片的那个数组
+              showIndex: true,
+              loop: false,
+              startPosition: index, // 指明预览第几张图
             });
-            console.log(window.wx.previewImage);
-          };
-          var delButton = document.createElement('button');
-          var delText = document.createTextNode('X');
-          delButton.className = 'del-button';
-          delButton.onclick = function handleDel(e, imgIdx = i) {
-            imgList.splice(i, 1);
-            pdfImg.innerHTML = '';
-            imgShow(imgList);
-          };
-          imgItemDiv.className = 'img-item';
-          delButton.appendChild(delText);
-          imgItemDiv.appendChild(img);
-          pdfImg.appendChild(delButton);
-          pdfImg.appendChild(imgItemDiv);
-        });
-      }
-      /*
-       * 点击取消时，删除上传的图片，同时将图片显示删除
-       * imgList 清空
-       * TODO:pdf删除接口
-       */
-      btnCancel.onclick = function () {
-        imgList = [];
-        imgShow(imgList);
-      };
-      /*
-       * 点击确定，去转回小程序s
-       */
-      btnConfirm.onclick = function () {
-        console.log('跳转回小程序首页');
-        console.log(window.wx);
-        window.wx.miniProgram.navigateTo({
-          url: '/pages/button/index',
-        });
-        // window.wx.miniProgram.reLaunch({
-        //   url: `pages/button/index`,
-        // })
-      };
-      /**
-       * 判断是否为空
-       */
-      function isEmpty(value) {
-        if (typeof value === 'undefined') {
-          return true;
-        } else if (value === null) {
-          return true;
-        } else if (typeof value === 'string' && value === '') {
-          return true;
-        } else if (typeof value === 'number' && isNaN(value)) {
-          return true;
-        } else if (Array.isArray(value) && value.length === 0) {
-          return true;
-        } else if (value instanceof Number && isNaN(value)) {
-          return true;
-        } else if (
-          value.toString() === '[object Object]' &&
-          Object.keys(value).length === 0
-        ) {
-          return true;
-        } else {
-          return false;
-        }
-      }
-      /**
-       * 判断是否为不为空
-       */
-      function isNotEmpty(value) {
-        return !this.isEmpty(value);
-      }
+          },
+          /*
+          * 处理确认
+          * TODO:走后端已提交接口,成功后，返回小程序首页
+          */
+          handleConfirm(){
+            wx.miniProgram.navigateTo({
+              url: '/pages/button/index',
+            });
+          },
+          /**
+           * 判断是否为空
+           */
+          isEmpty(value) {
+            if (typeof value === 'undefined') {
+              return true;
+            } else if (value === null) {
+              return true;
+            } else if (typeof value === 'string' && value === '') {
+              return true;
+            } else if (typeof value === 'number' && isNaN(value)) {
+              return true;
+            } else if (Array.isArray(value) && value.length === 0) {
+              return true;
+            } else if (value instanceof Number && isNaN(value)) {
+              return true;
+            } else if (
+              value.toString() === '[object Object]' &&
+              Object.keys(value).length === 0
+            ) {
+              return true;
+            } else {
+              return false;
+            }
+          },
+          /**
+           * 判断是否为不为空
+           */
+          isNotEmpty(value) {
+            return !this.isEmpty(value);
+          },
+        },
+        created() {},
+      });
+      // var imgList = [];
+      // //获取dom元素
+      // let uploadFile = document.getElementById('pdf');
+      // let pdfImg = document.getElementById('pdfImg');
+      // let btnCancel = document.getElementById('btnCancel');
+      // let btnConfirm = document.getElementById('btnConfirm');
+      // uploadFile.onchange = function() {
+      //   let fileType = []; //文件类型数组（只允许pdf上传）
+      //   let formDate = new FormData(); //构造FormData对象,这个是最终上传的文件
+      //   for (let i = 0; i < this.files.length; i++) {
+      //     formDate.append(i, this.files[i]);
+      //     let type = '.' + this.files[i].type.substr(-3).toLowerCase();
+      //     fileType.push(type);
+      //   }
+      //   // 根据文件后缀，判断文件类型
+      //   let arr = fileType.filter((e) => {
+      //     return e !== '.pdf';
+      //   });
+      //   if (arr.length !== 0) {
+      //     alert('存在不是pdf的文件');
+      //     return;
+      //   }
+      //   // TODO:调整图片样式，后期图片上传成功后从接口返回
+      //   imgList = [
+      //     'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1751456476,189368205&fm=26&gp=0.jpg',
+      //     'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=2466252146,2320787087&fm=15&gp=0.jpg',
+      //   ];
+      //   imgShow(imgList);
+      //   return;
+      //   var xhr = new XMLHttpRequest(); //创建xhr对象
+      //   xhr.open('POST', 'url'); //上传的方法和地址
+      //   xhr.setRequestHeader('Content-Type', 'multipart/form-data');
+      //   // xhr.setRequestHeader('Authorization', token); //token
+      //   xhr.send(formDate);
+      //   xhr.onreadystatechange = function() {
+      //     // if (this.readyState == 4 && this.status == 200) {
+      //     //   var obj = JSON.parse(xhr.responseText); //返回值
+      //     //   console.log(obj);
+      //     //   if (obj.data) {
+      //     //     alert('上传成功');
+      //     //     //TODO:上传成功的pdf图片才能回显，后端返回反显地址
+      //     //   }
+      //     // }
+      //   };
+      // };
+      // /*
+      //  * 图片反显封装的函数
+      //  * 1、如果传的list为空的，则移除pdfImg下的所有img标签
+      //  * 2、list不为空时，遍历imgList 数组，动态生成div,img标签，添加src
+      //  * 3、给标签添加点击事件
+      //  * 4、单个删除img，将pdfImg容器先制空在向里面添加元素
+      //  */
+      // function imgShow(list) {
+      //   if (isEmpty(list)) {
+      //     pdfImg.innerHTML = '';
+      //     return;
+      //   }
+      //   var imgHeader = document.createElement('div');
+      //   imgHeader.className = 'img-header';
+      //   imgHeader.innerText = '已上传';
+      //   pdfImg.appendChild(imgHeader);
+      //   list.forEach((item, i) => {
+      //     var imgItemDiv = document.createElement('div');
+      //     var img = document.createElement('img');
+      //     img.src = item;
+      //     img.onclick = function handleClickImg(e, imgUrl = item) {
+      //       console.log(111, imgUrl);
+      //       window.wx.previewImage({
+      //         urls: [imgUrl],
+      //       });
+      //       console.log(window.wx.previewImage);
+      //     };
+      //     var delButton = document.createElement('button');
+      //     var delText = document.createTextNode('X');
+      //     delButton.className = 'del-button';
+      //     delButton.onclick = function handleDel(e, imgIdx = i) {
+      //       imgList.splice(i, 1);
+      //       pdfImg.innerHTML = '';
+      //       imgShow(imgList);
+      //     };
+      //     imgItemDiv.className = 'img-item';
+      //     delButton.appendChild(delText);
+      //     imgItemDiv.appendChild(img);
+      //     pdfImg.appendChild(delButton);
+      //     pdfImg.appendChild(imgItemDiv);
+      //   });
+      // }
+      // /*
+      //  * 点击取消时，删除上传的图片，同时将图片显示删除
+      //  * imgList 清空
+      //  * TODO:pdf删除接口
+      //  */
+      // btnCancel.onclick = function() {
+      //   imgList = [];
+      //   imgShow(imgList);
+      // };
+      // /*
+      //  * 点击确定，去转回小程序s
+      //  */
+      // btnConfirm.onclick = function() {
+      //   console.log('跳转回小程序首页');
+      //   console.log(window.wx);
+      //   window.wx.miniProgram.navigateTo({
+      //     url: '/pages/button/index',
+      //   });
+      //   // window.wx.miniProgram.reLaunch({
+      //   //   url: `pages/button/index`,
+      //   // })
+      // };
     </script>
   </body>
 </html>
