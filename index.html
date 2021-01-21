@@ -14,7 +14,6 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
     <script src="https://cdn.bootcss.com/jquery/3.5.1/jquery.min.js"></script>
-    <!-- <script scr='./static/lib/jquery-3.4.1/jquery-3.4.1.min.js'></script> -->
   </head>
   <style type="text/css">
     body {
@@ -159,8 +158,7 @@
         </div>
         <!-- pdf图片反显区域 -->
         <div class="pdf-img" id="pdfImg">
-          <!-- TODO:判断显隐,下面的img 应该使用数组遍历 v-if="imgSrcList.length > 0" -->
-          <div class="img-header">已上传</div>
+          <div class="img-header" v-if="imgSrcList.length > 0">已上传</div>
           <div class="img-item" v-for="(img,idx) in imgSrcList" :key="idx">
             <van-image
               width="250"
@@ -172,7 +170,7 @@
             <van-icon
               class="del-button"
               name="close"
-              @click="handleDelete(idx)"
+              @click="handleDelete(img.invoiceId,idx)"
             />
           </div>
         </div>
@@ -194,22 +192,7 @@
         data: function() {
           return {
             fileList: [], //上传文件列表
-            imgSrcList: [
-              { url: 'https://img.yzcdn.cn/vant/leaf.jpg' },
-              {
-                url: 'https://img.yzcdn.cn/vant/sand.jpg',
-                deletable: true,
-                beforeDelete: () => {
-                  Toast('自定义单个预览图片的事件和样式');
-                },
-              },
-              {
-                url: 'https://img.yzcdn.cn/vant/tree.jpg',
-                deletable: true,
-                imageFit: 'contain',
-                previewSize: 120,
-              },
-            ], //图片Scr列表
+            imgSrcList: [], //图片Scr列表
           };
         },
         methods: {
@@ -227,60 +210,61 @@
             let flag = fileTypeList.some((e) => e !== 'application/pdf');
             if (flag) {
               alert('存在不是pdf的文件');
-              vant.Toast({
-                message: '存在不是pdf的文件',
-                icon: 'none',
-              });
               return false;
             }
             return true;
           },
           /*
            * 处理上传成功之后的回调
+           * 遍历文件列表的每一项，单个文件上传
            */
           handleAfterRead(file) {
             let fileList = [];
             fileList = fileList.concat(file);
             fileList.forEach((file) => {
               let fileForm = this.buildParams(file.file);
-              this.uploadFile(fileForm)
+              this.uploadFile(fileForm);
             });
           },
           /**
            * 构建参数
+           * mobile,agyId通过路由地址获取
            */
           buildParams(file) {
             let params = new FormData();
-            // params.append('key', idx);
-            params.append('pdfId', file.lastModified);
-            params.append('contentType', file.type);
+            params.append('mobile', '3319d08f9268e57b0dfcd9c069196cd0');
+            params.append('agyId', '1283577844798099458');
             params.append('file', file);
             return params;
           },
           /**
            * 上传附件
-           * TODO:之后接要调试，参数要调试
+           * 将构建的参数
+           * 将获取的数据push到显示图片的数组中
            */
           uploadFile(params) {
+            let _this = this;
             $.ajax({
-              url: '/pty/pa/wechat/signature',
+              url:
+                'http://192.168.2.129:30000/platform/external/invoice/webInvoiceBatch',
               type: 'post',
-              data: JSON.stringify({
-                url: location.href.split('#')[0],
-              }),
-              contentType: 'application/json;charset=utf-8',
-              async: true,
+              data: params,
+              contentType: false,
+              processData: false,
               success: function(res) {
-                // var data = res.data;
-                // appId = data.appId;
-                // wx.config({
-                //   debug: false, // 是否开启调试模式
-                //   appId: data.appId, // 必填，公众号的唯一标识
-                //   timestamp: data.timestamp, // 必填，生成签名的时间戳
-                //   nonceStr: data.noncestr, // 必填，生成签名的随机串
-                //   signature: data.signature, // 必填，签名
-                //   jsApiList: ['scanQRCode', 'chooseImage'], // 必填，需要使用的JS接口列表
-                // });
+                if (res.code !== 0) {
+                  alert(res.msg);
+                  return;
+                }
+                var data = res.data;
+                if (_this.isNotEmpty(data)) {
+                  data.webH5VoList[0].url =
+                    'data:image/png;base64,' + data.webH5VoList[0].imageBase64;
+                  _this.imgSrcList.push(data.webH5VoList[0]);
+                }
+              },
+              error: function(err) {
+                console.error(err);
               },
             });
           },
@@ -289,12 +273,38 @@
            * TODO:pdf删除接口,根据传参来判断是单个删除还是全部清空
            *     存在参数，是单个删除
            */
-          handleDelete(idx) {
-            if (this.isEmpty(idx)) {
-              this.imgSrcList = [];
+          handleDelete(invoiceId, idx) {
+            let _this = this;
+            let invoiceIdList = [];
+            if (this.isEmpty(invoiceId)) {
+              invoiceIdList = this.imgSrcList.map((item) => item.invoiceId);
             } else {
-              this.imgSrcList.splice(idx, 1);
+              invoiceIdList.push(invoiceId);
             }
+            let params = new FormData();
+            params.append('invoiceIdStrList', invoiceIdList);
+            $.ajax({
+              url:
+                'http://192.168.2.129:30000/platform/external/invoice/webDeletePdfUrl',
+              type: 'post',
+              data: params,
+              contentType: false,
+              processData: false,
+              async: true,
+              success: function(res) {
+                if (res.code !== 0) {
+                  alert(res.msg);
+                }
+                if (_this.isEmpty(invoiceId)) {
+                  _this.imgSrcList = [];
+                } else {
+                  _this.imgSrcList.splice(idx, 1);
+                }
+              },
+              error: function(err) {
+                console.error(err);
+              },
+            });
           },
           /*
            * 处理图片预览
@@ -348,7 +358,10 @@
             return !this.isEmpty(value);
           },
         },
-        created() {},
+        created(){
+          var param =window.location.href;
+          console.log(param);
+        }
       });
     </script>
   </body>
