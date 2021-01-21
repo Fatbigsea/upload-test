@@ -377,12 +377,20 @@
           },
         },
         created() {
+          var param =decodeURIComponent(window.location.href);
+          console.log(param);
           this.agyId = this.getUrlParam('agyId');
           this.mobile = this.getUrlParam('mobile');
           this.baseurl = this.getUrlParam('baseurl');
-          console.log(this.agyId,111);
-          console.log(this.mobile);
-          console.log(this.baseurl,333);
+          console.log(this.agyId,111)
+          window.alert = function(name){
+            var iframe = document.createElement("IFRAME");
+            iframe.style.display="none";
+            iframe.setAttribute("src", 'data:text/plain,');
+            document.documentElement.appendChild(iframe);
+            window.frames[0].window.alert(name);
+            iframe.parentNode.removeChild(iframe);
+          };
         },
       });
     </script>
